@@ -1,4 +1,3 @@
-
 import os
 from collections.abc import Generator
 from functools import lru_cache
@@ -15,13 +14,12 @@ class Base(DeclarativeBase):
     pass
 
 
-@lru_cache(maxsize=1)
-def get_engine() -> Engine:
+def get_database_url() -> str:
     url = os.getenv("DATABASE_URL", "").strip()
 
     if not url or url.startswith("REPLACE_"):
         raise RuntimeError(
-            "Set DATABASE_URL in .env before connecting to PostgreSQL."
+            "DATABASE_URL is missing. Configure PostgreSQL in .env."
         )
 
     if url.startswith("postgres://"):
@@ -31,10 +29,17 @@ def get_engine() -> Engine:
         url = "postgresql+psycopg://" + url[len("postgresql://"):]
 
     if not url.startswith("postgresql+psycopg://"):
-        raise RuntimeError("A PostgreSQL psycopg URL is required.")
+        raise RuntimeError(
+            "DATABASE_URL must use PostgreSQL with the psycopg driver."
+        )
 
+    return url
+
+
+@lru_cache(maxsize=1)
+def get_engine() -> Engine:
     return create_engine(
-        url,
+        get_database_url(),
         pool_pre_ping=True,
         pool_size=5,
         max_overflow=10,
@@ -55,6 +60,7 @@ def get_session_factory():
 
 def get_db() -> Generator[Session, None, None]:
     db = get_session_factory()()
+
     try:
         yield db
     finally:
