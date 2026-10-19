@@ -1,24 +1,46 @@
+import os
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.database import Base
+from app.api.auth import router as auth_router
+from app.database import get_engine
 
 app = FastAPI(
     title="ApexiveAI Workforce Payroll SaaS",
     version="0.1.0",
-    description="Multi-company workforce, attendance and payroll platform",
+    description=(
+        "Multi-company workforce, attendance and payroll platform"
+    ),
 )
 
-# Development frontend origins only. Restrict production origins
-# through environment configuration before public deployment.
+cors_origins = [
+    item.strip()
+    for item in os.getenv(
+        "CORS_ORIGINS",
+        "http://localhost:3000",
+    ).split(",")
+    if item.strip()
+]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],
+    allow_origins=cors_origins,
     allow_credentials=True,
-    allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE"],
-    allow_headers=["Authorization", "Content-Type"],
+    allow_methods=[
+        "GET",
+        "POST",
+        "PUT",
+        "PATCH",
+        "DELETE",
+    ],
+    allow_headers=[
+        "Authorization",
+        "Content-Type",
+    ],
 )
+
+app.include_router(auth_router)
 
 
 @app.get("/health", tags=["System"])
@@ -33,9 +55,16 @@ def health():
 @app.get("/health/database", tags=["System"])
 def database_health():
     from sqlalchemy import text
-    from app.database import get_engine
 
-    with get_engine().connect() as connection:
-        connection.execute(text("SELECT 1"))
+    engine = get_engine()
 
-    return {"status": "ok", "database": "connected"}
+    with engine.connect() as connection:
+        result = connection.execute(
+            text("SELECT 1")
+        ).scalar()
+
+    return {
+        "status": "ok",
+        "database": "connected",
+        "result": result,
+    }

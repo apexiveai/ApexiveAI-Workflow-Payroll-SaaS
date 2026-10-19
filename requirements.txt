@@ -1,0 +1,18 @@
+APEXIVEAI WORKFORCE PAYROLL SAAS
+SUPER ADMIN INITIAL SETUP
+
+Super Admin username: apexiveai-superadmin
+
+Super Admin email (optional): apexiveai@aol.com
+
+New password (minimum 12 characters):
+Confirm password:
+
+SUCCESS: Super Admin created.
+Username: apexiveai-superadmin
+Role: SUPER_ADMIN
+Password: not displayed
+
+Keep your credentials secure.
+------------------------------------------------------------
+password - bhonehtetnaing2026
